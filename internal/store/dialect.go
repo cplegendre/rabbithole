@@ -130,6 +130,7 @@ func (sqliteDialect) additiveTables() []additive {
 		{table: "onboarding", ddl: onboardingSchema, upgradeSeed: onboardingUpgradeSeed},
 		{table: "config_versions", ddl: configSchema},
 		{table: "config_imports", ddl: configImportSchema},
+		{table: "briefings", ddl: briefingSchema},
 	}
 }
 
@@ -275,6 +276,7 @@ func (postgresDialect) additiveTables() []additive {
 		{table: "onboarding", ddl: onboardingSchema, upgradeSeed: onboardingUpgradeSeed},
 		{table: "config_versions", ddl: configSchema},
 		{table: "config_imports", ddl: configImportSchema},
+		{table: "briefings", ddl: briefingSchemaPG},
 	}
 }
 
