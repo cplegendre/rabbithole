@@ -4,6 +4,7 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -92,6 +93,13 @@ func ingestE(cmd *cobra.Command, _ []string) error {
 	})
 	if err != nil {
 		return err
+	}
+	if !dryRun {
+		clusterCtx, cancel := context.WithTimeout(ctx, ingest.StoryClusterTimeout)
+		if _, cerr := ingest.RebuildStoryClusters(clusterCtx, run, db); cerr != nil {
+			log.Warn().Err(cerr).Msg("story clustering failed; the feed is unchanged")
+		}
+		cancel()
 	}
 	if len(outcome.Unseen) == 0 {
 		fmt.Println("No new items to score.")
