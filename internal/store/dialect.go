@@ -130,6 +130,8 @@ func (sqliteDialect) additiveTables() []additive {
 		{table: "onboarding", ddl: onboardingSchema, upgradeSeed: onboardingUpgradeSeed},
 		{table: "config_versions", ddl: configSchema},
 		{table: "config_imports", ddl: configImportSchema},
+		{table: "story_clusters", ddl: storyClusterSchema},
+		{table: "story_cluster_items", ddl: storyClusterItemSchema},
 	}
 }
 
@@ -275,6 +277,8 @@ func (postgresDialect) additiveTables() []additive {
 		{table: "onboarding", ddl: onboardingSchema, upgradeSeed: onboardingUpgradeSeed},
 		{table: "config_versions", ddl: configSchema},
 		{table: "config_imports", ddl: configImportSchema},
+		{table: "story_clusters", ddl: storyClusterSchemaPG},
+		{table: "story_cluster_items", ddl: storyClusterItemSchemaPG},
 	}
 }
 
