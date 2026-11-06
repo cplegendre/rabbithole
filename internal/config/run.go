@@ -32,11 +32,12 @@ const RunSchemaVersion = 2
 // that are not stored (store, profile, ingest.feeds). It is decoded leniently,
 // so unknown keys are ignored.
 type File struct {
-	User      string        `yaml:"user"`
-	Profile   string        `yaml:"profile"`
-	Inference FileInference `yaml:"inference"`
-	Ingest    FileIngest    `yaml:"ingest"`
-	Store     StoreConfig   `yaml:"store"`
+	User      string         `yaml:"user"`
+	Profile   string         `yaml:"profile"`
+	Inference FileInference  `yaml:"inference"`
+	Ingest    FileIngest     `yaml:"ingest"`
+	Briefing  BriefingConfig `yaml:"briefing"`
+	Store     StoreConfig    `yaml:"store"`
 }
 
 // Config is the stored shape: what the config store keeps and what ingest
@@ -46,6 +47,7 @@ type Config struct {
 	User      string          `yaml:"user,omitempty"` // shell-prompt name on the web UI; blank falls back to the OS user
 	Inference InferenceConfig `yaml:"inference,omitempty"`
 	Ingest    IngestConfig    `yaml:"ingest,omitempty"`
+	Briefing  BriefingConfig  `yaml:"briefing,omitempty"`
 }
 
 // IngestConfig is the stored part of the ingest block.
@@ -144,6 +146,7 @@ func (f File) Split() (run Config, store StoreConfig, legacy Legacy, dropped []s
 		User:      f.User,
 		Inference: f.Inference.InferenceConfig,
 		Ingest:    IngestConfig{DigestDir: f.Ingest.DigestDir},
+		Briefing:  f.Briefing,
 	}
 	dropped = run.Normalize()
 	legacy.ProfilePath = f.Profile
@@ -226,6 +229,11 @@ func (r *Config) DropDefaults() (dropped []string) {
 	for _, f := range inferenceFields {
 		if f.isSet(in) {
 			try("inference."+f.name, func(c *Config) { f.clear(&c.Inference) })
+		}
+	}
+	for _, f := range briefingFields {
+		if f.isSet(&r.Briefing) {
+			try("briefing."+f.name, func(c *Config) { f.clear(&c.Briefing) })
 		}
 	}
 	return dropped
@@ -332,6 +340,7 @@ func (r *Config) applyDefaults() {
 	if in.MaxParallel <= 0 {
 		in.MaxParallel = defaultMaxParallel
 	}
+	r.Briefing = r.Briefing.WithDefaults()
 }
 
 // FieldError is one validation failure, keyed by the dotted field name so a UI
@@ -385,6 +394,15 @@ func (r *Config) validate() error {
 			add(inferenceKeyField, "%s: %s", inferenceKeyField, err)
 		}
 	}
+	if r.Briefing.MaxArticles > MaxBriefingArticles {
+		add("briefing.max_articles", "briefing.max_articles must be at most %d", MaxBriefingArticles)
+	}
+	if r.Briefing.MaxDevelopments > MaxBriefingDevelopments {
+		add("briefing.max_developments", "briefing.max_developments must be at most %d", MaxBriefingDevelopments)
+	}
+	if r.Briefing.RecommendedReads > MaxBriefingRecommendedReads {
+		add("briefing.recommended_reads", "briefing.recommended_reads must be at most %d", MaxBriefingRecommendedReads)
+	}
 	return errors.Join(errs...)
 }
 
@@ -417,6 +435,7 @@ type inferenceYAML struct {
 	Provider         string              `yaml:"provider,omitempty"`
 	Host             string              `yaml:"host,omitempty"`
 	Model            string              `yaml:"model,omitempty"`
+	EmbeddingModel   string              `yaml:"embedding_model,omitempty"`
 	APIKey           string              `yaml:"api_key,omitempty"`
 	Think            *bool               `yaml:"think,omitempty"`
 	Effort           string              `yaml:"effort,omitempty"`
@@ -430,8 +449,8 @@ type inferenceYAML struct {
 // MarshalYAML renders the minimal form: unset optional fields are omitted.
 func (c InferenceConfig) MarshalYAML() (any, error) {
 	out := inferenceYAML{
-		Provider: c.Provider, Host: c.Host, Model: c.Model, APIKey: c.APIKey,
-		Think: c.Think, Effort: c.Effort, StructuredOutput: c.StructuredOutput,
+		Provider: c.Provider, Host: c.Host, Model: c.Model, EmbeddingModel: c.EmbeddingModel,
+		APIKey: c.APIKey, Think: c.Think, Effort: c.Effort, StructuredOutput: c.StructuredOutput,
 		SystemPrompt: c.SystemPrompt, BatchSize: c.BatchSize, MaxParallel: c.MaxParallel,
 	}
 	t := tuningYAML{

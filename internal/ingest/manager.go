@@ -273,6 +273,13 @@ func (m *Manager) execute(
 		runLogger.Error().Str("kind", string(run.kind)).Str("error", msg).
 			Msg(string(run.kind) + " failed")
 	}
+	if status == store.IngestStatusOK {
+		clusterCtx, clusterCancel := context.WithTimeout(context.Background(), StoryClusterTimeout)
+		if _, cerr := RebuildStoryClusters(clusterCtx, cfg, m.db); cerr != nil {
+			runLogger.Warn().Err(cerr).Msg("story clustering failed; the feed is unchanged")
+		}
+		clusterCancel()
+	}
 
 	// The run's ctx may be cancelled (that's how Cancel works); the history
 	// write must still land, so it gets its own short-lived context.
