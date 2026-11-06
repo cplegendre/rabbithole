@@ -131,6 +131,8 @@ func (sqliteDialect) additiveTables() []additive {
 		{table: "config_versions", ddl: configSchema},
 		{table: "config_imports", ddl: configImportSchema},
 		{table: "briefings", ddl: briefingSchema},
+		{table: "story_clusters", ddl: storyClusterSchema},
+		{table: "story_cluster_items", ddl: storyClusterItemSchema},
 	}
 }
 
@@ -277,6 +279,8 @@ func (postgresDialect) additiveTables() []additive {
 		{table: "config_versions", ddl: configSchema},
 		{table: "config_imports", ddl: configImportSchema},
 		{table: "briefings", ddl: briefingSchemaPG},
+		{table: "story_clusters", ddl: storyClusterSchemaPG},
+		{table: "story_cluster_items", ddl: storyClusterItemSchemaPG},
 	}
 }
 
